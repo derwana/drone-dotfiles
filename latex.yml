@@ -1,0 +1,40 @@
+---
+kind: pipeline
+type: docker
+name: make
+
+steps:
+- name: latexindent
+  image: ghcr.io/cmhughes/latexindent.pl:latest
+  commands:
+    - latexindent.pl -w -rv -sl $(find . -type f -name "*.tex" -printf "%p ") # run latexindent on all TEX files in project folder and its subfolders
+    - git add $(find . -type f -name "*.tex" -printf "%p ") # add all TEX files to git staging area
+
+- name: chktex
+  image: leplusorg/latex
+  commands:
+    - apt-get update -y
+    - apt-get install -y chktex # install chktex if needed
+    - chktex thesis.tex -qv2 # run chktex with human readable output
+  depends_on:
+    - latexindent # run this step after step 'latexindent'
+
+- name: make project
+  image: leplusorg/latex
+  commands:
+    - make nuke # clean project
+    - make all  # build project
+    - git add thesis.pdf # add generated PDF to git staging area
+  depends_on:
+    - latexindent # run this step after step 'chktex'
+
+- name: push
+  image: leplusorg/latex
+  commands:
+    - git commit -m "Update automatically generated PDF and indent TEX files [CI SKIP]" # commit staged files
+    - git push --set-upstream origin $(git branch --show-current)  # push commit
+  when:
+    status:
+      - success
+  depends_on:
+    - make project # run this step after step 'make project'
