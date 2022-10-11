@@ -1,0 +1,61 @@
+---
+kind: pipeline
+type: docker
+name: update
+steps:
+- name: black
+  image: python:3.10-alpine3.15
+  commands:
+    - pip install black isort
+    - cd fingerprint
+    - isort .
+    - black .
+- name: push
+  image: alpine:latest
+  commands:
+    - apk update
+    - apk add git
+    - git add **/*.py
+    - git commit -m "Update formatting of python files with black [CI SKIP]" --allow-empty
+    - git push --set-upstream origin $(git branch --show-current)
+  depends_on:
+    - black
+- name: gitea_release
+  image: plugins/gitea-release
+  settings:
+    api_key:
+      from_secret: gitea_api_key
+    base_url: https://git.fiw.hs-wismar.de #set to your gitea base url
+    files: dist/*
+    checksum: md5
+  when:
+    branch:
+      - master
+    status:
+      - success
+  depends_on:
+    - black
+    - push
+
+---
+kind: pipeline
+type: docker
+name: tests
+steps:
+- name: pylint
+  image: python:3.10-alpine3.15
+  commands:
+    - pip install pylint
+    - cd fingerprint		#set to directory of package in your project
+    - pylint .
+- name: bandit
+  image: python:3.10-alpine3.15
+  commands:
+    - pip install bandit
+    - bandit -r fingerprint	#set to directory of package in your project
+    - bandit -r tests 		#set to directory of tests in your project
+#- name: tox
+#  image: python:3.10-alpine3.15
+#  commands:
+#    - pip install tox
+#    - tox -e ALL
