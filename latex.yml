@@ -22,8 +22,15 @@ steps:
 - name: make project
   image: leplusorg/latex
   commands:
-    - make nuke # clean project
-    - make all  # build project
+    - TARG=main.tex	#set your main LaTeX file here
+    - latexmk -c
+    - rm -f ${TARG}.acn ${TARG}.acr ${TARG}.alg ${TARG}.bbl ${TARG}.glg ${TARG}.glo ${TARG}.gls ${TARG}.ist ${TARG}.lol ${TARG}.run.xml ${TARG}.slg ${TARG}.syg ${TARG}.syi ${TARG}.nlo ${TARG}.pdf
+    - lualatex -shell-escape ${TARG}
+    - biber ${TARG}
+    - makeglossaries ${TARG}
+    - lualatex -shell-escape ${TARG}
+    - lualatex -shell-escape ${TARG}
+    - lualatex -shell-escape ${TARG}
     - git add thesis.pdf # add generated PDF to git staging area
   depends_on:
     - latexindent # run this step after step 'chktex'
