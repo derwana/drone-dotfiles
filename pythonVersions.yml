@@ -1,0 +1,35 @@
+---
+kind: pipeline
+name: python-versions-test
+
+steps:
+- name: v3.7
+  image: python:3.7-alpine3.15
+  commands:
+  - pip install -r requirements.txt
+  - pytest
+
+- name: v3.8
+  image: python:3.8-alpine3.15
+  commands:
+  - pip install -r requirements.txt
+  - pytest
+
+- name: v3.9
+  image: python:3.9-alpine3.15
+  commands:
+  - pip install -r requirements.txt
+  - pytest
+
+- name: v3.10
+  image: python:3.10-alpine3.15
+  commands:
+  - pip install -r requirements.txt
+  - pytest
+
+- name: v3.11
+  image: python:3.11-alpine3.15
+  commands:
+  - pip install -r requirements.txt
+  - pytest
+  
