@@ -20,6 +20,7 @@ steps:
     - git push --set-upstream origin $(git branch --show-current)
   depends_on:
     - black
+
 - name: gitea_release
   image: plugins/gitea-release
   settings:
@@ -36,6 +37,21 @@ steps:
   depends_on:
     - black
     - push
+
+- name: pypi_publish
+  image: plugins/pypi
+  settings:
+    username: 
+      from_secret: pypi_username
+    password: 
+      from_secret: pypi_password
+  when:
+    branch:
+      - master
+    status:
+      - success
+  depends_on:
+    - gitea_release
 
 ---
 kind: pipeline
